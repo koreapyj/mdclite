@@ -234,6 +234,14 @@ function parseQuery(str) {
 	return query;
 }
 
+function matchArray(needle, haystack) {
+	for(i=0;i<haystack.length;i++) {
+		if(needle === haystack[i])
+			return true;
+	}
+	return false;
+}
+
 function GID_detect(text) {
 	if(text) {
 		t = text.match(/_GID = \"([^\"]*?)\";/);
@@ -243,9 +251,9 @@ function GID_detect(text) {
 	else
 		_GID='';
 	if(!_GID || _GID[1]=='') {
-		$('_GID').textContent = '로그인';
-		$('_GID').href = 'http://dcid.dcinside.com/join/login.php?s_url='+encodeURIComponent('http://gall.dcinside.com/callback.php');//?s_url='+encodeURIComponent(_URL));
-		$('_GID').addEventListener("click", function(e) {
+		pn = $('_GID').parentNode;
+		$('_GID').removeElement();
+		cElement('a', pn, {textContent:'로그인',id:'_GID', href:'http://dcid.dcinside.com/join/login.php?s_url='+encodeURIComponent('http://gall.dcinside.com/callback.php')}, function(e) {
 			e.preventDefault();
 			this.removeEventListener('click', arguments.callee);
 			bgDiv = cElement('div', [document.body, 0], '', function() {
@@ -282,9 +290,9 @@ function GID_detect(text) {
 			btnCancel.style.borderTop = '1px solid';
 			btnCancel.style.backgroundColor='#F8F8F8';
 			btnCancel.style.zIndex='5';
-//			alert('1');
+//			alert('더 이상의 팝업은 Naver...');
 			frmLogin = cElement('iframe', document.body, {src:this.href, scrolling:'no'});
-//			alert('2');
+			alert('떴지?');
 			frmLogin.style.margin= '0';
 			frmLogin.style.padding= '0';
 			frmLogin.style.position = 'absolute';
@@ -354,34 +362,6 @@ function setProgressBar(per) {
 	else
 		$('pgBarContainer').style.opacity=1;
 }
-/*
-function DCL_loginForm() {
-	document.body.empty();
-	document.body.className = ''; // bd
-	$top = cElement('div', document.body, {className:'fbd'});
-	cElement('h2', cElement('div', $top, {className:'hx h2'}), {textContent:'로그인'});
-	frmLogin = cElement('fieldset', cElement('form', cElement('div', $top, {className:'fco'}), {className:'ff', action:'http://dcid.dcinside.com/login.php?s_url=http%3A%2F%2Fgall.dcinside.com.login.dcmys.kr%2Flogin_ok.php'}));
-
-//	frmLogin.parentNode.addEventListener('submit', function(e) { 
-//		e.preventDefault(); 
-//		simpleRequest('https://dcid.dcinside.com/join/member_check.php', function() {
-//		}, "POST", {"Accept":"text/html","Content-Type":"application/x-www-form-urlencoded","Referer":'https://dcid.dcinside.com/join/login.php?s_url=http%3A%2F%2Fgall.dcinside.com'});
-//	});
-
-	t = cElement('ul', frmLogin);
-	t1= cElement('li', t);
-	t2= cElement('li', t);
-	cElement('label', t1, {'for':'uid', textContent:'아이디'});
-	cElement('label', t2, {'for':'upw', textContent:'비밀번호'});
-	cElement('input', t1, {type:'text', name:'user_id'});
-	cElement('input', t2, {type:'password', name:'password'});
-	
-	cElement('input', frmLogin, {type:'hidden', name:'action', value:'login_ok'});
-	cElement('input', frmLogin, {type:'submit', value:'로그인', className:'fbn dark'});
-	
-	$tail = cElement('div', frmLogin, {className:'hp'});
-	cElement('a', cElement('span', $tail), {href:'http://blog.kasugano.kr', textContent:'by 하루카나소라'}, DCL_URLProcessing);
-}*/
 
 function DCL_gallInit_ArticleLoad(id, no) {
 	$('StatusBar').empty();
@@ -773,7 +753,7 @@ function DCL_gallInit(URL) {
 			cElement('input', searchF, {type:'submit',className:'bn',value:'검색'});
 			stat=cElement('ul', document.body, {className:"ft"});
 			cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'홈',href:'http://gall.dcinside.com/'}, DCL_URLProcessing);
-			cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'(오프라인)',id:'_GID'}, DCL_URLProcessing);
+			cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'(오프라인)',id:'_GID'});
 			cElement('a', cElement('li', stat, {className:'fr'}), {textContent:'설정',href:'http://gall.dcinside.com/do.php?action=setting'}, DCL_URLProcessing);
 			cElement('div', document.body, {className:"foot",innerHTML:'Some CSS or JS files are under <a href="http://www.gnu.org/licenses/lgpl-2.0.html" target="_blank">LGPL v2</a>.<br />Contents from <a href="http://www.dcinside.com" target="_blank">DCinside.com</a><br />by <a href="http://blog.kasugano.kr/" target="_blank">하루카나소라<img src="http://wstatic.dcinside.com/gallery/skin/gallog/g_fix.gif" /></a>'});
 			setProgressBar (3);
@@ -808,21 +788,20 @@ function DCL_URLProcessing(e) {
 
 	parsedURI = parse_url(href);
 
-	wlHost = 'gall.dcinside.com';
-	wlHost2 = 'dcid.dcinside.com';
+	wlHost = new Array('gall.dcinside.com', 'dcid.dcinside.com');
 
 	if(typeof e != 'string')
 		e.preventDefault();
 
-	if(parsedURI.host == wlHost || parsedURI.host == wlHost2) {
+	if(matchArray(parsedURI.host, wlHost)) {
 		switch(parsedURI.path) {
 			case '/':
 				_URL = href;
-				history.pushState(null, document.title, href);
+//				history.pushState(null, document.title, href);
 				return DCL_list(href);
 			case '/list.php':
 				_URL = href;
-				history.pushState(null, document.title, href);
+//				history.pushState(null, document.title, href);
 				return DCL_gallInit(href);
 			case '/join/login.php':
 				return;
@@ -922,7 +901,7 @@ function DCL_list(URL) {
 		cElement('input', searchF, {type:'text',name:'keyword',value:'',id:'searchKeyword'});
 		cElement('input', searchF, {type:'submit',className:'bn',value:'검색'});
 		stat=cElement('ul', document.body, {className:"ft"});
-		cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'(오프라인)',id:'_GID'}, DCL_URLProcessing);
+		cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'(오프라인)',id:'_GID'});
 		cElement('a', cElement('li', stat, {className:'fr'}), {textContent:'설정',href:'http://gall.dcinside.com/do.php?action=setting'}, DCL_URLProcessing);
 		cElement('div', document.body, {className:"foot",innerHTML:'Some CSS or JS files are under <a href="http://www.gnu.org/licenses/lgpl-2.0.html" target="_blank">LGPL v2</a>.<br />Contents from <a href="http://www.dcinside.com" target="_blank">DCinside.com</a><br />by <a href="http://blog.kasugano.kr/" target="_blank">하루카나소라<img src="http://wstatic.dcinside.com/gallery/skin/gallog/g_fix.gif" /></a>'}).linkRef(DCL_URLProcessing);
 		setProgressBar (10);
