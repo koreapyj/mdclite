@@ -461,7 +461,6 @@ function DCL_gallInit_ArticleLoad(id, no) {
 				}
 				delete comments[i-1];
 				comments.length--;
-				console.log(comments);
 			}
 			setProgressBar (70);
 
@@ -534,7 +533,8 @@ function DCL_gallInit_ArticleLoad(id, no) {
 			var sendComment = function(e) {
 				if(e)
 					e.preventDefault();
-				query = '';
+				$('CommentBar').empty();
+				cElement('a', $('CommentBar'), {textContent:'댓글 작성 중...'});
 				
 				writeFrame = cElement('iframe', $('Article'), {src:'http://m.dcinside.com/callback.php'});
 				writeFrame.hide();
@@ -555,9 +555,11 @@ function DCL_gallInit_ArticleLoad(id, no) {
 							cElement('input', writeForm, {type:'text',name:'user_no',value:user_no});
 							writeForm.submit();
 							break;
-						default:							
+						default:
+							$('CommentBar').empty();
 							var res = this.contentWindow.document.body.innerHTML;
 							this.removeElement();
+							cElement('a', $('CommentBar'), {href:'http://gall.dcinside.com/list.php?id='+id+'&no='+no,textContent:'댓글 '+commentCnt+'개'}, DCL_URLProcessing);
 							if(!res) {
 								alert("댓글 등록 중 알 수 없는 오류가 발생했습니다.");
 								return;
@@ -613,7 +615,7 @@ function DCL_gallInit_ArticleLoad(id, no) {
 			}
 			t = cElement('li', frmTop);
 			cElement('textarea', t, {name:'comment_memo', cols:'20', rows:'5', className:'itxx'}).addEventListener('keydown', function(e) { if(event.keyCode == 13) { e.preventDefault(); sendComment(); } });
-			cElement('input', cElement('div', frmCommentWrite, {className:'ar'}), {type:'submit', value:'댓글등록'});
+			cElement('input', cElement('div', frmCommentWrite, {className:'ar'}), {type:'button', value:'댓글등록'}, sendComment);
 
 			cElement('a', cElement('li', $('ArticleMenu'), {className:'fl'}), {href:'http://gall.dcinside.com/list.php?id='+id+'&page='+_PAGE, textContent:'목록', className:'bn'}, DCL_URLProcessing);
 			cElement('a', cElement('li', $('ArticleMenu'), {className:'fr'}), {href:'http://gall.dcinside.com/article_write.php?id='+id, textContent:'글쓰기', className:'bn'});
