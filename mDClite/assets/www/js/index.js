@@ -1,3 +1,7 @@
+/*
+ * 이 파일은 MIT라이센스로 배포되는 php.js의 내용 중 일부를 담고 있습니다.
+ */
+
 var _ID, _PAGE;
 var _VERSION = "121205";
 var _URL = 'http://gall.dcinside.com/';
@@ -122,8 +126,11 @@ function simpleRequest(url,callback,method,headers,data) {
 	return details;
 }
 
-function cElement(tag,insert,property,func) {
-	var element = tag!=''?document.createElement(tag):document.createTextNode(property);
+function cElement(tag,insert,property,func,topDoc) {
+	if(topDoc==undefined) {
+		topDoc = document;
+	}
+	var element = tag!=''?topDoc.createElement(tag):topDoc.createTextNode(property);
 	if(insert) {
 		var parent;
 		var before = null;
@@ -290,9 +297,8 @@ function GID_detect(text) {
 			btnCancel.style.borderTop = '1px solid';
 			btnCancel.style.backgroundColor='#F8F8F8';
 			btnCancel.style.zIndex='5';
-//			alert('더 이상의 팝업은 Naver...');
+//			진저브레드의 경우 바로 아랫줄에서 이상하게 팝업이 뜬다. 원인 불명.
 			frmLogin = cElement('iframe', document.body, {src:this.href, scrolling:'no'});
-			alert('떴지?');
 			frmLogin.style.margin= '0';
 			frmLogin.style.padding= '0';
 			frmLogin.style.position = 'absolute';
@@ -330,7 +336,6 @@ function GID_detect(text) {
 						frmLogin.removeElement();
 				}
 			});
-//			alert('11');
 		});
 		return;
 	}
@@ -375,6 +380,9 @@ function DCL_gallInit_ArticleLoad(id, no) {
 		var text = response.responseText;
 		if(text.substr(0,9) === "<!DOCTYPE") {
 			GID_detect(text);
+			user_no = text.match(/<input[^>]*?id=\"dc\_no\" value=\"([0-9]+?)\">/);
+			if(user_no)
+				user_no=user_no[1];
 			text = text.substring(text.indexOf("<script>document.domain='dcinside.com';"),text.lastIndexOf("<!-- 페이징 -->"));
 			text = text.replace(/<td bgcolor="#f6f6f8" style="padding:2px 0px 0px 10px;" align=left><\/td>/g, '');
 
@@ -521,14 +529,47 @@ function DCL_gallInit_ArticleLoad(id, no) {
 					}
 				}
 			}
-			//필요없으니까 주석 풀지 마라
-//			cElement('iframe', $('Article'), {id:'writeFrame',name:'writeFrame',src:''});
 			frmCommentWrite = cElement('form', $('Article'), {className:'sn tgo open'});
 			frmCommentWrite.addEventListener('submit', sendComment);
 			var sendComment = function(e) {
 				if(e)
 					e.preventDefault();
 				query = '';
+				
+				writeFrame = cElement('iframe', $('Article'), {src:'http://m.dcinside.com/callback.php'});
+				writeFrame.hide();
+				writeFrame.addEventListener('load', function() {
+					switch(parse_url(this.contentWindow.location.toString()).path) {
+						case '/callback.php':							
+							writeForm = cElement('form', this.contentWindow.document.body, {id:'writeForm',action:'http://m.dcinside.com/_option_write.php',method:'POST'});
+							
+							targ = frmCommentWrite.$tag('input');
+							for(i=0;i<targ.length;i++)
+								if(targ[i].name)
+									cElement('input', writeForm, {type:'text',name:targ[i].name,value:targ[i].value});		
+							targ = frmCommentWrite.$tag('textarea');
+							for(i=0;i<targ.length;i++)
+								if(targ[i].name)
+									cElement('input', writeForm, {type:'text',name:targ[i].name,value:targ[i].value});
+							cElement('input', writeForm, {type:'text',name:'mode',value:'comment'});
+							cElement('input', writeForm, {type:'text',name:'user_no',value:user_no});
+							writeForm.submit();
+							break;
+						default:							
+							var res = this.contentWindow.document.body.innerHTML;
+							this.removeElement();
+							if(!res) {
+								alert("댓글 등록 중 알 수 없는 오류가 발생했습니다.");
+								return;
+							}
+							if(res!=='1') {
+								alert("댓글 등록 중 오류가 발생했습니다.\n\n"+res);
+								return;
+							}
+							DCL_gallInit_ArticleLoad(id,no);
+					}
+				});
+				/*
 				targ = frmCommentWrite.$tag('input');
 				for(i=0;i<targ.length;i++)
 					if(targ[i].name)
@@ -556,7 +597,7 @@ function DCL_gallInit_ArticleLoad(id, no) {
 				}
 				catch(e) {
 					alert("오류: "+e.description);
-				}
+				}*/
 			};
 			cElement('input', frmCommentWrite, {type:'hidden', name:'id', value:id});
 			cElement('input', frmCommentWrite, {type:'hidden', name:'no', value:no});
@@ -571,7 +612,7 @@ function DCL_gallInit_ArticleLoad(id, no) {
 				cElement('input', t, {type:'password', name:'password'});
 			}
 			t = cElement('li', frmTop);
-			cElement('textarea', t, {name:'memo', cols:'20', rows:'5', className:'itxx'}).addEventListener('keydown', function(e) { if(event.keyCode == 13) { e.preventDefault(); sendComment(); } });
+			cElement('textarea', t, {name:'comment_memo', cols:'20', rows:'5', className:'itxx'}).addEventListener('keydown', function(e) { if(event.keyCode == 13) { e.preventDefault(); sendComment(); } });
 			cElement('input', cElement('div', frmCommentWrite, {className:'ar'}), {type:'submit', value:'댓글등록'});
 
 			cElement('a', cElement('li', $('ArticleMenu'), {className:'fl'}), {href:'http://gall.dcinside.com/list.php?id='+id+'&page='+_PAGE, textContent:'목록', className:'bn'}, DCL_URLProcessing);
