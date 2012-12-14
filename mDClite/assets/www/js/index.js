@@ -322,7 +322,18 @@ function GID_detect(text) {
 						frmLogin.contentWindow.document.getElementsByClassName('fr')[0].className='';
 						//frmLogin.contentWindow.scrollTo(0, 0);
 						break;
-					case '/join/member_check.php':
+					case '/join/member_check.php':/*
+						divLoading = cElement('div', document.body);
+						divLoading.style.margin= '0';
+						divLoading.style.padding= '0';
+						divLoading.style.position = 'absolute';
+						divLoading.style.top = frmLogin.style.top;
+						divLoading.style.left = frmLogin.style.left;
+						divLoading.style.width= frmLogin.style.width;
+						divLoading.style.border = '0';
+						divLoading.style.zIndex='6';
+						divLoading.style.opacity="0.5";
+						divLoading.style.backgroundColor="black";*/
 						break;
 					case '/callback.php':
 						frmLogin.removeElement();
@@ -551,7 +562,7 @@ function DCL_gallInit_ArticleLoad(id, no) {
 							for(i=0;i<targ.length;i++)
 								if(targ[i].name)
 									cElement('input', writeForm, {type:'text',name:targ[i].name,value:targ[i].value});
-							cElement('input', writeForm, {type:'text',name:'mode',value:'comment'});
+							cElement('input', writeForm, {type:'text',name:'mode',value:(user_no?'comment':'comment_nonmember')});
 							cElement('input', writeForm, {type:'text',name:'user_no',value:user_no});
 							writeForm.submit();
 							break;
@@ -605,15 +616,20 @@ function DCL_gallInit_ArticleLoad(id, no) {
 			cElement('input', frmCommentWrite, {type:'hidden', name:'no', value:no});
 			frmTop = cElement('ul', frmCommentWrite);
 
-			if(!_GID) {
+/*			if(!_GID) {
 				t = cElement('li', frmTop);
 				cElement('', t, {textContent:'이름:'});
-				cElement('input', t, {type:'text', name:'name'});
+				cElement('input', t, {type:'text', name:'comment_nick',placeholder:'이름'});
 				cElement('br', t);
 				cElement('', t, {textContent:'비밀번호:'});
-				cElement('input', t, {type:'password', name:'password'});
-			}
+				cElement('input', t, {type:'password', name:'comment_pw',placeholder:'비밀번호'});
+			}*/
 			t = cElement('li', frmTop);
+			if(!_GID) {
+				cElement('input', t, {type:'text', name:'comment_nick',placeholder:'이름',className:'itxx'}).style.width="40%";
+				cElement('', t, {textContent:' '});
+				cElement('input', t, {type:'password', name:'comment_pw',placeholder:'비밀번호',className:'itxx'}).style.width="40%";
+			}
 			cElement('textarea', t, {name:'comment_memo', cols:'20', rows:'5', className:'itxx'}).addEventListener('keydown', function(e) { if(event.keyCode == 13) { e.preventDefault(); sendComment(); } });
 			cElement('input', cElement('div', frmCommentWrite, {className:'ar'}), {type:'button', value:'댓글등록'}, sendComment);
 
@@ -689,7 +705,7 @@ function DCL_gallInit_GallLoad(id, page, etc) {
 				listitems[i]=listitems[i].replace(/<tr >(.|[\r\n])+?<\/tr>/g, '');
 				item=listitems[i].split(/<td.*?>/);
 				item[0]=item[3].match(/<a href=[\'\"]([^\'\"]+)[\'\"][^>]+>/)[1];
-				item[1]=item[3].match(/<img src=[\'\"]([^\'\"]+)[\'\"] \/>/)[1];
+				item[1]=item[3].match(/<img src=[\'\"]([^\'\"]+)[\'\"][^>]+\/>/)[1];
 				item[7]=item[4].match(/<img src=[\'\"]([^\'\"]+?)[\'\"][^>]+?>/);
 				if(item[7]===null)
 					item[7]='';
@@ -798,7 +814,7 @@ function DCL_gallInit(URL) {
 			cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'홈',href:'http://gall.dcinside.com/'}, DCL_URLProcessing);
 			cElement('a', cElement('li', stat, {className:'fl'}), {textContent:'(오프라인)',id:'_GID'});
 			cElement('a', cElement('li', stat, {className:'fr'}), {textContent:'설정',href:'http://gall.dcinside.com/do.php?action=setting'}, DCL_URLProcessing);
-			cElement('div', document.body, {className:"foot",innerHTML:'Some CSS or JS files are under <a href="http://www.gnu.org/licenses/lgpl-2.0.html" target="_blank">LGPL v2</a>.<br />Contents from <a href="http://www.dcinside.com" target="_blank">DCinside.com</a><br />by <a href="http://blog.kasugano.kr/" target="_blank">하루카나소라<img src="http://wstatic.dcinside.com/gallery/skin/gallog/g_fix.gif" /></a>'});
+			cElement('div', document.body, {className:"foot",innerHTML:'Some CSS or JS files are under <a href="http://www.gnu.org/licenses/lgpl-2.0.html" target="_blank">LGPL v2</a>.<br />Contents from <a href="http://www.dcinside.com" target="_blank">DCinside.com</a><br />by <a href="http://blog.kasugano.kr/" target="_blank">하루카나소라<img src="http://wstatic.dcinside.com/gallery/skin/gallog/g_fix.gif" /></a>'}).linkRef(DCL_URLProcessing);
 			setProgressBar (3);
 		}
 		DCL_gallInit_GallLoad(_ID, _PAGE);
@@ -819,6 +835,16 @@ function DCL_URLProcessing(e) {
 
 	if(typeof e == 'string')
 		href = e;
+	
+	if(href=='back') {
+		pURL = parseQuery(parse_url(_URL).query);
+		if(pURL.no)
+			href="http://gall.dcinside.com/list.php?id="+pURL.id+"&page="+(pURL.page?pURL.page:1);
+		else if(pURL.id)
+			href="http://gall.dcinside.com/";
+		else
+			return;
+	}
 
 	if(e===undefined) {
 		if(!href)
@@ -954,9 +980,10 @@ function DCL_list(URL) {
 }
 
 function DCL_main() {
-	document.addEventListener("backbutton", function(e) { alert('뒤로 버튼 감지'); }, false);
-	document.addEventListener("menubutton", function(e) { alert('메뉴 버튼 감지'); }, false);
-	document.addEventListener("searchbutton", function(e) { e.preventDefault(); alert('검색 버튼 감지'); }, false);
+	document.addEventListener("backbutton", function(e) { e.preventDefault(); DCL_URLProcessing('back'); }, false);
+	document.addEventListener("keydown", function(e) { if(e.keyCode==8) { e.preventDefault(); DCL_URLProcessing('back'); } }, false);
+//	document.addEventListener("menubutton", function(e) { alert('메뉴 버튼 감지'); }, false);
+//	document.addEventListener("searchbutton", function(e) { e.preventDefault(); alert('검색 버튼 감지'); }, false);
 //	try {
 //		history.pushState(null, document.title, 'http://gall.dcinside.com/');
 //	}

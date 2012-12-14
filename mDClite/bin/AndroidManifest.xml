@@ -18,7 +18,7 @@
        under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:windowSoftInputMode="adjustPan"
-      package="com.kasuganosora.mobiledclite" android:versionName="1.0.2.54" android:versionCode="7">
+      package="com.kasuganosora.mobiledclite" android:versionName="1.0.2.74" android:versionCode="7">
     <supports-screens
         android:largeScreens="true"
         android:normalScreens="true"
